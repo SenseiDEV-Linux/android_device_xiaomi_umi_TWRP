@@ -129,15 +129,27 @@ BOARD_USES_METADATA_PARTITION := true
 ifdef DECRYPT_PLATFORM_VERSION
 PLATFORM_VERSION := $(DECRYPT_PLATFORM_VERSION)
 else
-PLATFORM_VERSION := 17.0.0
+# NOTE: pinned to 99, NOT to the ROM's Android version. QTI keymaster binds
+# key unwrapping to BOTH the OS version and the patchlevel tags: a recovery
+# reporting a LOWER OS version than the installed ROM fails the metadata
+# unwrap exactly like a patchlevel mismatch does (keys are re-bound on the
+# first boot after every OTA). A far-future value always satisfies the check,
+# so decryption survives ROM updates. Cosmetic side effect: the recovery
+# reports Android release "99".
+PLATFORM_VERSION := 99
 endif
 PLATFORM_VERSION_LAST_STABLE := $(PLATFORM_VERSION)
+# Same reasoning as PLATFORM_VERSION: a far-future SPL always passes the
+# keymaster version check, so decrypt does not break after every monthly
+# security update. Harmless here - bootloader is unlocked, AVB rollback
+# index is not enforced.
 PLATFORM_SECURITY_PATCH := 2099-12-31
 VENDOR_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
 TW_INCLUDE_CRYPTO := true
 TW_INCLUDE_CRYPTO_FBE := true
 TW_INCLUDE_FBE_METADATA_DECRYPT := true
-TW_USE_FSCRYPT_POLICY := 2
+# Must match PRODUCT_SHIPPING_API_LEVEL := 29 in device.mk (FBE v1 / ice).
+TW_USE_FSCRYPT_POLICY := 1
 
 # Network
 BUILD_BROKEN_USES_NETWORK := true

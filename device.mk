@@ -27,7 +27,15 @@ PRODUCT_PACKAGES += \
     bootctrl.xiaomi_sm8250.recovery
 
 # SHIPPING API
-PRODUCT_SHIPPING_API_LEVEL := 30
+# LOAD-BEARING for decryption. ro.product.first_api_level in the recovery
+# ramdisk comes from here, and it picks the whole crypto profile:
+#   29 (Android 10, apollo's launch release) -> FBE v1 + legacy dm-default-key
+#   30+                                      -> FBE v2 + v2 dm-default-key
+# With 30 the recovery mounts /data with the v2 profile while the installed
+# ROM uses v1/ice: vold hands the raw wrapped key blob to dm-default-key and
+# it fails ("Invalid keysize"), so /data never mounts and /sdcard stays empty.
+PRODUCT_SHIPPING_API_LEVEL := 29
+PRODUCT_FIRST_API_LEVEL := 29
 
 # VNDK API
 PRODUCT_TARGET_VNDK_VERSION := 31

@@ -42,6 +42,12 @@ OF_DISABLE_MIUI_OTA_BY_DEFAULT := 1
 # try to prevent potential data format errors
 OF_UNBIND_SDCARD_F2FS := 1
 
+# /sdcard lives inside /data on this device (RECOVERY_SDCARD_ON_DATA). Without
+# this, OrangeFox treats /sdcard as plain settings storage and unmounts /data
+# after the DE decrypt, so the internal storage list stays empty even when the
+# decrypt itself succeeded.
+OF_FIX_DECRYPTION_ON_DATA_MEDIA := 1
+
 # maximum permissible splash image size (in kilobytes); do *NOT* increase!
 OF_SPLASH_MAX_SIZE := 130
 
