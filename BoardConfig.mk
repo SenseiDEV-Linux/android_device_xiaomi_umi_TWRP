@@ -173,6 +173,38 @@ TW_INCLUDE_NTFS_3G := true
 TW_NO_EXFAT_FUSE := true
 TW_USE_TOOLBOX := true
 TW_INPUT_BLACKLIST := "hbtp_vm"
+
+# --- Touch: folders opening by themselves while scrolling -------------------
+# TWRP's minui keeps a SINGLE touch point: minuitwrp/events.cpp stores one
+# mt_p.x/mt_p pair and has no ABS_MT_SLOT handling, so a second finger simply
+# overwrites x/y. "Finger up" is inferred from the event stream, and two of
+# those inferences fire spuriously mid-gesture:
+#
+#   * ABS_MT_TOUCH_MAJOR == 0 -> touchReleaseOnNextSynReport = 1
+#     (events.cpp:554 case, 561 assign; guarded by TW_IGNORE_MAJOR_AXIS_0 at :557)
+#   * ABS_MT_PRESSURE    == 0 -> touchReleaseOnNextSynReport = 1
+#     (events.cpp:569 case, 575 assign; NOT guarded by anything in fox_12.1 -
+#      see patches/optional-bootable_recovery-TW_IGNORE_MT_PRESSURE_0.patch)
+#
+# A panel that reports zero major/pressure while the finger is still down makes
+# the GUI emit a fake TOUCH_RELEASE at the current position. GUIScrollList still
+# has an item selected at that moment, so the folder under the finger opens.
+#
+# This flag only covers the TOUCH_MAJOR path. Which of the two the panel uses is
+# visible in `getevent -lt` output - check before assuming the flag is enough.
+#
+# Release still works without this code path: the panel signals the real
+# finger-up with ABS_MT_TRACKING_ID = -1, which sets
+# touchReleaseOnNextSynReport = 2 (events.cpp:626) - a different branch.
+# If taps ever stop registering, revert this one line.
+TW_IGNORE_MAJOR_AXIS_0 := true
+
+# Log every TOUCH_START/TOUCH_DRAG/TOUCH_RELEASE and the raw EV_ABS events to
+# the recovery log. Keep this on until the touch behaviour is confirmed, then
+# remove it - it is noisy. Read with:
+#   adb shell cat /tmp/recovery.log | grep -E "TOUCH_|EV_ABS"
+TW_EVENT_LOGGING := true
+TWRP_EVENT_LOGGING := true
 TW_BRIGHTNESS_PATH := "/sys/class/backlight/panel0-backlight/brightness"
 TW_MAX_BRIGHTNESS := 2047
 TW_DEFAULT_BRIGHTNESS := 300
